@@ -1,22 +1,31 @@
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
 
-public class CSP {
+public class GraphicalCSP {
     static int n;
     static boolean isThereAnswer = false;
+    static JFrame mainFrame;
+    static JButton[][] buttons;
+    static int speed=100;
 
-    public static void main(String[] args) throws FileNotFoundException {
-        File file = new File("./puzzles/puzzle0.txt");
+    public static void main(String[] args) throws FileNotFoundException, InterruptedException {
+        File file = new File("./puzzles/puzzle1.txt");
         Scanner sc = new Scanner(file);
         n = sc.nextInt();
         int dummy = sc.nextInt();
         int[][] a = new int[n][n];
+        mainFrame=new JFrame();
+        mainFrame.setLayout(new GridLayout(n,n));
+        buttons=new JButton[n][n];
         ArrayList<String> variables = new ArrayList<>();
         HashMap<String, ArrayList<Integer>> domains = new HashMap<>();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
+                JButton button=new JButton();
                 String tmp = sc.next();
                 if (tmp.equals("-")) {
                     a[i][j] = -1;
@@ -26,11 +35,24 @@ public class CSP {
                     domain.add(1);
                     variables.add(current);
                     domains.put(current, domain);
+                    button.setText(" ");
+                    button.setFont(new Font("Arial", Font.PLAIN, 30));
+                    button.setBackground(new Color(238,238,238));
+                    buttons[i][j]=button;
+                    mainFrame.add(button);
                 } else {
                     a[i][j] = Integer.parseInt(tmp);
+                    button.setText(tmp);
+                    button.setFont(new Font("Arial", Font.PLAIN, 30));
+                    button.setBackground(new Color(238,238,238));
+                    buttons[i][j]=button;
+                    mainFrame.add(button);
                 }
             }
         }
+        mainFrame.setSize(n*80,n*80);
+        mainFrame.setTitle("Forward Checking Method");
+        mainFrame.setVisible(true);
 
         //Forward Checking
         System.out.println("Forward Checking method : ");
@@ -38,14 +60,34 @@ public class CSP {
         cspBacktrackingWithForwardChecking(variables, domains, a);
         long finish1 = new Date().getTime();
         if (!isThereAnswer) {
+            for(int i=0;i<n;i++){
+                for(int j=0;j<n;j++){
+                    buttons[i][j].setBackground(Color.ORANGE);
+                }
+            }
             System.out.println("This puzzle can't be solved!");
             System.out.println("It took " + (finish1 - start1) + " milliseconds to find out that there is no answer for this puzzle.");
         } else {
+            for(int i=0;i<n;i++){
+                for(int j=0;j<n;j++){
+                    buttons[i][j].setBackground(Color.CYAN);
+                }
+            }
             System.out.println();
             System.out.println("It took " + (finish1 - start1) + " milliseconds to solve.");
         }
         System.out.println("-----------------------------------------------------------------------------------------------------------");
         isThereAnswer = false;
+
+        System.out.println("Press Enter to continue...");
+        Scanner sc2=new Scanner(System.in);
+        String waitStr=sc2.nextLine();
+        mainFrame.setTitle("Maintaining Arc Consistency method : ");
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                buttons[i][j].setBackground(new Color(238,238,238));
+            }
+        }
 
         //Maintaining Arc Consistency
         System.out.println("Maintaining Arc Consistency method : ");
@@ -53,12 +95,23 @@ public class CSP {
         cspBacktrackingWithMac(variables, domains, a);
         long finish2 = new Date().getTime();
         if (!isThereAnswer) {
+            for(int i=0;i<n;i++){
+                for(int j=0;j<n;j++){
+                    buttons[i][j].setBackground(Color.ORANGE);
+                }
+            }
             System.out.println("This puzzle can't be solved!");
             System.out.println("It took " + (finish2 - start2) + " milliseconds to find out that there is no answer for this puzzle.");
         } else {
+            for(int i=0;i<n;i++){
+                for(int j=0;j<n;j++){
+                    buttons[i][j].setBackground(Color.CYAN);
+                }
+            }
             System.out.println();
             System.out.println("It took " + (finish2 - start2) + " milliseconds to solve.");
         }
+
 
     }
 
@@ -69,7 +122,7 @@ public class CSP {
      * @param domains
      * @param newA
      */
-    static void cspBacktrackingWithMac(ArrayList<String> variables, HashMap<String, ArrayList<Integer>> domains, int[][] newA) {
+    static void cspBacktrackingWithMac(ArrayList<String> variables, HashMap<String, ArrayList<Integer>> domains, int[][] newA) throws InterruptedException {
         if (isThereAnswer) {
             return;
         }
@@ -77,8 +130,16 @@ public class CSP {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 a[i][j] = newA[i][j];
+                String tmpC="";
+                if(a[i][j]==-1){
+                    tmpC=" ";
+                }else{
+                    tmpC=String.valueOf(a[i][j]);
+                }
+                buttons[i][j].setText(tmpC);
             }
         }
+        Thread.sleep(speed);
         String variableToAssign = "";
         //MRV
         int minimumRemaining = Integer.MAX_VALUE;
@@ -388,6 +449,7 @@ public class CSP {
                         System.out.println();
                     }
                     isThereAnswer = true;
+                    buttons[x][y].setText(String.valueOf(a[x][y]));
                 }
             } else {
                 cspBacktrackingWithMac(newVariables, newDomains, a);
@@ -490,7 +552,7 @@ public class CSP {
      * @param domains
      * @param newA
      */
-    static void cspBacktrackingWithForwardChecking(ArrayList<String> variables, HashMap<String, ArrayList<Integer>> domains, int[][] newA) {
+    static void cspBacktrackingWithForwardChecking(ArrayList<String> variables, HashMap<String, ArrayList<Integer>> domains, int[][] newA) throws InterruptedException {
         if (isThereAnswer) {
             return;
         }
@@ -498,8 +560,16 @@ public class CSP {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 a[i][j] = newA[i][j];
+                String tmpC="";
+                if(a[i][j]==-1){
+                    tmpC=" ";
+                }else{
+                    tmpC=String.valueOf(a[i][j]);
+                }
+                buttons[i][j].setText(tmpC);
             }
         }
+        Thread.sleep(speed);
         String variableToAssign = "";
         //MRV
         int minimumRemaining = Integer.MAX_VALUE;
@@ -715,6 +785,7 @@ public class CSP {
                     System.out.println();
                 }
                 isThereAnswer = true;
+                buttons[x][y].setText(String.valueOf(a[x][y]));
             } else {
                 cspBacktrackingWithForwardChecking(newVariables, newDomains, a);
             }
